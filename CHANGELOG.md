@@ -1,6 +1,11 @@
 # Changelog
 
-## [1.1.0] - 2026-07-12
+## [1.0.1] - 2026-07-12
+### Fixed
+- Link to changelog
+- Version in changelog
+    
+## [1.0.0] - 2026-07-12
 
 ### Added
 - `extract_bpm()` in `audio.py` — extracts BPM from `(BPM)` prefix in filenames

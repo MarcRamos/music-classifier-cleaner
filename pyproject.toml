@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "music-classifier-cleaner"
-version = "1.0.0"
+version = "1.0.1"
 description = "Classify, organise, BPM-tap and download music"
 authors = []
 readme = "README.md"

@@ -2,7 +2,7 @@
 
 Classifies a music library by artist genre (via MusicBrainz), reorganises folders by genre, and taps BPMs for local MP3 collections.
 
-See [CHANGELOG.md](CHANGELOG.md) for version history.
+See [CHANGELOG.md](https://github.com/MarcRamos/music-classifier-cleaner/blob/main/CHANGELOG.md) for version history.
 
 ## Commands
 
