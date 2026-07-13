@@ -1,6 +1,28 @@
 import os
+import shutil
 
 import yt_dlp
+
+
+def _check_ffmpeg():
+    if not shutil.which("ffmpeg") or not shutil.which("ffprobe"):
+        raise RuntimeError(
+            "ffmpeg and ffprobe are required for audio conversion.\n"
+            "Install them:\n"
+            "  Ubuntu/Debian: sudo apt install ffmpeg\n"
+            "  macOS:         brew install ffmpeg\n"
+            "  Windows:       choco install ffmpeg"
+        )
+
+
+def _check_js_runtime():
+    if not shutil.which("deno"):
+        raise RuntimeError(
+            "A JavaScript runtime (deno) is required for YouTube downloads.\n"
+            "Install deno:\n"
+            "  curl -fsSL https://deno.land/install.sh | sh\n"
+            "Or visit: https://deno.land/#installation"
+        )
 
 
 DEFAULT_YDL_OPTS = {
@@ -47,6 +69,9 @@ def download_ytmusic_playlist(urls, dest_dir=".", extra_opts=None):
 
     os.makedirs(dest_dir, exist_ok=True)
     downloaded = []
+
+    _check_ffmpeg()
+    _check_js_runtime()
 
     with yt_dlp.YoutubeDL(opts) as ydl:
         for url in urls:

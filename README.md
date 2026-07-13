@@ -174,7 +174,7 @@ download-ytmusic "https://music.youtube.com/playlist?list=PL..." --out /path/to/
 
 ## Developing
 
-**Requirements:** Python 3.10+, [Poetry](https://python-poetry.org/docs/#installation), and system libraries for `pygame` (`libsdl2-dev`) and `yt-dlp`/`ffmpeg`.
+**Requirements:** Python 3.10+, [Poetry](https://python-poetry.org/docs/#installation), [ffmpeg](https://ffmpeg.org/) (`sudo apt install ffmpeg`), [unzip](https://infozip.sourceforge.net/) (`sudo apt install unzip`), [deno](https://deno.land/) (`curl -fsSL https://deno.land/install.sh | sh` — restart your shell after install), and system libraries for `pygame` (`libsdl2-dev`).
 
 ```bash
 # Clone and install
