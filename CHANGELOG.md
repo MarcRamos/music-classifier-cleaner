@@ -1,10 +1,13 @@
 # Changelog
 
+## [1.0.2] - 2026-XX-XX
+
+
 ## [1.0.1] - 2026-07-12
 ### Fixed
 - Link to changelog
 - Version in changelog
-    
+
 ## [1.0.0] - 2026-07-12
 
 ### Added

@@ -1,6 +1,7 @@
 import argparse
 import csv
 import shutil
+from pathlib import Path
 
 from mutagen import MutagenError
 from mutagen.easyid3 import EasyID3
@@ -20,13 +21,85 @@ from music_classifier.utils import (
 )
 
 
+def _set_artist_tag(file_path, artist_name):
+    file_path = Path(file_path)
+    ext = file_path.suffix.lower()
+    if ext == ".mp3":
+        try:
+            audio = EasyID3(file_path)
+        except ID3NoHeaderError:
+            return
+        audio["artist"] = artist_name
+        audio.save(file_path)
+    elif ext == ".flac":
+        try:
+            from mutagen.flac import FLAC
+            audio = FLAC(file_path)
+            audio["ARTIST"] = [artist_name]
+            audio.save()
+        except Exception:
+            pass
+
+
+def _tag_only_main(library):
+    files = sorted(library.rglob("*.mp3")) + sorted(library.rglob("*.flac"))
+    if not files:
+        print("No audio files found.")
+        return
+
+    print(f"Found {len(files)} audio files")
+    print()
+
+    artist_files = {}
+    for f in files:
+        artist = artist_from_audio(f)
+        if not artist:
+            continue
+        clean = normalize_artist(artist)
+        if not clean:
+            continue
+        if clean not in artist_files:
+            artist_files[clean] = []
+        artist_files[clean].append(f)
+
+    if not artist_files:
+        print("No artists found.")
+        return
+
+    raw_names = list(artist_files.keys())
+    canonical_list, mapping = deduplicate(raw_names)
+
+    updated = 0
+    for raw_name, canonical_name in mapping.items():
+        if raw_name == canonical_name:
+            continue
+        for f in artist_files[raw_name]:
+            rel = f.relative_to(library)
+            _set_artist_tag(f, canonical_name)
+            print(f"  Updated artist: {rel} ({raw_name} -> {canonical_name})")
+            updated += 1
+
+    if updated:
+        print()
+        print(f"Normalized {updated} file(s).")
+
+    print()
+    tag_library_genres(library)
+
+
 def classify_organize_main():
     """Scan library, classify artists by genre via MusicBrainz, reorganise into genre folders."""
     parser = argparse.ArgumentParser(description="Classify and organise a music library.")
     parser.add_argument("library", help="Path to the music library root")
+    parser.add_argument("--tag-only", action="store_true",
+                        help="Tag genres and normalize artist names in-place without moving folders")
     args = parser.parse_args()
 
     library = resolve_library_path(args.library)
+
+    if args.tag_only:
+        _tag_only_main(library)
+        return
 
     entries = sorted(library.iterdir())
     artist_folders = {}
