@@ -43,6 +43,16 @@ DEFAULT_YDL_OPTS = {
 }
 
 
+def _strip_na_prefix(dest_dir):
+    for filename in os.listdir(dest_dir):
+        if filename.lower().endswith(".mp3") and filename.startswith("NA - "):
+            new_name = filename[len("NA - "):]
+            old_path = os.path.join(dest_dir, filename)
+            new_path = os.path.join(dest_dir, new_name)
+            if not os.path.exists(new_path):
+                os.rename(old_path, new_path)
+
+
 def download_ytmusic_playlist(urls, dest_dir=".", extra_opts=None):
     """
     Download audio from YouTube Music playlists as MP3.
@@ -81,5 +91,7 @@ def download_ytmusic_playlist(urls, dest_dir=".", extra_opts=None):
                 downloaded.append(url)
             except Exception as e:
                 print(f"  Error downloading {url}: {e}")
+
+    _strip_na_prefix(dest_dir)
 
     return downloaded
