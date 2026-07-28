@@ -3,6 +3,8 @@
 ## [1.0.2] - 2026-07-27
 ### Added
 - `--tag-only` flag on `classify-organize` — tags genres and normalizes artist names in-place without moving folders into genre directories
+### Fixed
+- YouTube downloads with missing artist rename files from `NA - title.mp3` to `title.mp3`
 
 
 ## [1.0.1] - 2026-07-12
