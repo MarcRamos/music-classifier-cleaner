@@ -7,3 +7,4 @@ __pycache__/
 *:Zone.Identifier
 htmlcov/
 AGENTS.md
+dist/
