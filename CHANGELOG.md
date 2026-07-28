@@ -1,6 +1,8 @@
 # Changelog
 
-## [1.0.2] - 2026-XX-XX
+## [1.0.2] - 2026-07-27
+### Added
+- `--tag-only` flag on `classify-organize` — tags genres and normalizes artist names in-place without moving folders into genre directories
 
 
 ## [1.0.1] - 2026-07-12

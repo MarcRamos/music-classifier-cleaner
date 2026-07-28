@@ -9,6 +9,7 @@ See [CHANGELOG.md](https://github.com/MarcRamos/music-classifier-cleaner/blob/ma
 | Command | Purpose |
 |---|---|
 | `classify-organize` | Scan library, classify artists by genre via MusicBrainz, reorganise into genre folders |
+| `classify-organize --tag-only` | Tag genres and normalize artist names in-place without moving folders |
 | `scan-library` | Scan library for artists with few songs, output a CSV for manual review |
 | `discover-from-library` | Process the review CSV — remove artist folders or explore top tracks via Deezer |
 | `tag-library-genres` | Tag all audio files with top 3 MusicBrainz genres + language tag |
@@ -49,6 +50,12 @@ Scans the library root for artist folders (any top-level directory that isn't a 
 
 ```bash
 classify-organize /path/to/music/library
+```
+
+**`--tag-only`:** Tag genres and normalize artist names in-place without moving folders into genre directories.
+
+```bash
+classify-organize /path/to/music/library --tag-only
 ```
 
 ---
