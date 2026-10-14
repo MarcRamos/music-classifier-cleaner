@@ -24,16 +24,59 @@ JUNK = {
 }
 
 
+def _is_windows_drive_path(path_str):
+    """Return True for Windows paths such as ``C:/music`` or ``C:\\music``."""
+    return (
+        len(path_str) >= 3
+        and path_str[0].isalpha()
+        and path_str[1] == ":"
+        and path_str[2] == "/"
+    )
+
+
+def _is_wsl_mount_path(path_str):
+    """Return True for WSL mount paths such as ``/mnt/c/music``."""
+    return (
+        path_str.startswith("/mnt/")
+        and len(path_str) > 6
+        and path_str[5].isalpha()
+        and path_str[6] == "/"
+    )
+
+
+def _path_candidates(path_str):
+    """Return the filesystem paths to try for a command-line path argument.
+
+    A Windows-style path (``C:/music``) also yields its WSL mount form
+    (``/mnt/c/music``) and a WSL mount path also yields its Windows form,
+    so the same argument works on either platform.
+    """
+    normalized = str(path_str).replace("\\", "/")
+    candidates = [normalized]
+    if _is_windows_drive_path(normalized):
+        drive = normalized[0].lower()
+        candidates.append(f"/mnt/{drive}{normalized[2:]}")
+    elif _is_wsl_mount_path(normalized):
+        drive = normalized[5].upper()
+        candidates.append(f"{drive}:/{normalized[7:]}")
+    return candidates
+
+
 def resolve_library_path(path_str):
-    path_str = str(path_str).replace("\\", "/")
-    if len(path_str) >= 3 and path_str[1] == ":" and path_str[2] == "/":
-        drive = path_str[0].lower()
-        path_str = f"/mnt/{drive}{path_str[2:]}"
-    path_obj = Path(path_str).resolve()
-    if not path_obj.exists():
-        msg = f"'{path_str}' not found"
-        raise FileNotFoundError(msg)
-    return path_obj
+    """Resolve a library path passed on the command line.
+
+    Accepts native Windows paths (``C:/music``), native POSIX paths
+    (``/home/user/music``), and the WSL mount form (``/mnt/c/music``).
+    The first candidate that exists on disk is returned, so the same
+    command works whether it runs on Windows or inside WSL.
+    """
+    for candidate in _path_candidates(path_str):
+        resolved = Path(candidate).expanduser().resolve()
+        if resolved.exists():
+            return resolved
+
+    msg = f"'{path_str}' not found"
+    raise FileNotFoundError(msg)
 
 
 def audio_files(directory):

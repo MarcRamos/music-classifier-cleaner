@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -7,7 +9,10 @@ from music_classifier.utils import (
     GENRE_MAP,
     LANGUAGE_MAP,
     FILTERED_TAGS,
+    _is_windows_drive_path,
+    _is_wsl_mount_path,
     _normalize_for_comparison,
+    _path_candidates,
     normalize_artist,
     get_artist_genres_and_language,
     _lastfm_get_top_tags,
@@ -17,6 +22,7 @@ from music_classifier.utils import (
     _file_already_tagged,
     tag_audio_file,
     artist_from_audio,
+    resolve_library_path,
 )
 
 # ---------------------------------------------------------------------------
@@ -760,3 +766,88 @@ class TestReorganizeByBpm:
         from music_classifier.utils import reorganize_by_bpm
         reorganize_by_bpm(str(tmp_path))
         assert (bpm_dir / "(120) Song.mp3").exists()
+
+
+# ---------------------------------------------------------------------------
+# path resolution
+# ---------------------------------------------------------------------------
+
+
+class TestPathCandidateDetection:
+    def test_detects_windows_drive_path(self):
+        assert _is_windows_drive_path("C:/music/rock") is True
+
+    def test_detects_lowercase_drive_path(self):
+        assert _is_windows_drive_path("d:/music") is True
+
+    def test_rejects_posix_path(self):
+        assert _is_windows_drive_path("/home/user/music") is False
+
+    def test_rejects_relative_path(self):
+        assert _is_windows_drive_path("music/rock") is False
+
+    def test_rejects_drive_without_slash(self):
+        assert _is_windows_drive_path("C:music") is False
+
+    def test_detects_wsl_mount_path(self):
+        assert _is_wsl_mount_path("/mnt/c/music") is True
+
+    def test_rejects_wsl_mount_without_subdir(self):
+        assert _is_wsl_mount_path("/mnt/c") is False
+
+    def test_rejects_non_mount_path(self):
+        assert _is_wsl_mount_path("/home/user/music") is False
+
+
+class TestPathCandidates:
+    def test_posix_path_is_returned_unchanged(self):
+        assert _path_candidates("/home/user/music") == ["/home/user/music"]
+
+    def test_relative_path_is_returned_unchanged(self):
+        assert _path_candidates("music/rock") == ["music/rock"]
+
+    def test_windows_path_adds_wsl_mount(self):
+        assert _path_candidates("C:/music/rock") == [
+            "C:/music/rock",
+            "/mnt/c/music/rock",
+        ]
+
+    def test_backslashes_are_normalized(self):
+        assert _path_candidates("C:\\music\\rock") == [
+            "C:/music/rock",
+            "/mnt/c/music/rock",
+        ]
+
+    def test_wsl_mount_path_adds_windows_form(self):
+        assert _path_candidates("/mnt/c/music/rock") == [
+            "/mnt/c/music/rock",
+            "C:/music/rock",
+        ]
+
+
+class TestResolveLibraryPath:
+    def test_resolves_native_path(self, tmp_path):
+        assert resolve_library_path(str(tmp_path)) == tmp_path.resolve()
+
+    def test_resolves_forward_slash_path(self, tmp_path):
+        forward = str(tmp_path).replace("\\", "/")
+        assert resolve_library_path(forward) == tmp_path.resolve()
+
+    def test_resolves_existing_relative_path(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        assert resolve_library_path(".") == tmp_path.resolve()
+
+    def test_expands_user_home(self):
+        assert resolve_library_path("~") == Path.home().resolve()
+
+    def test_raises_when_path_missing(self):
+        with pytest.raises(FileNotFoundError):
+            resolve_library_path("definitely/not/a/real/path/xyz")
+
+    def test_wsl_mount_form_resolves_when_drive_exists(self, tmp_path):
+        if os.name != "nt":
+            pytest.skip("drive-letter paths only exist on Windows")
+        drive = str(tmp_path)[0].lower()
+        suffix = str(tmp_path)[2:].replace("\\", "/")
+        resolved = resolve_library_path(f"/mnt/{drive}{suffix}")
+        assert resolved == tmp_path.resolve()

@@ -19,6 +19,16 @@ See [CHANGELOG.md](https://github.com/MarcRamos/music-classifier-cleaner/blob/ma
 
 All commands are available system-wide after `pip install -e .`. Alternatively use `poetry run <command>`.
 
+### Paths
+
+Path arguments can be given in the native form for your platform and are resolved automatically:
+
+- Windows: `C:\Music` or `C:/Music`
+- WSL: `/mnt/c/Music`
+- Linux / macOS: `/home/user/Music`
+
+The same argument works everywhere, so `music-tapper "C:\Music"` on Windows and `music-tapper /mnt/c/Music` inside WSL both resolve to the same folder.
+
 ## Configuration
 
 | Variable | Required | Description |
@@ -210,7 +220,7 @@ When editing, all changes to files under `music_classifier/` take effect immedia
 ## Running tests
 
 ```bash
-# Run all tests (135 tests)
+# Run all tests (158 tests)
 pytest tests/ -v
 
 # Run with coverage
@@ -241,6 +251,7 @@ music-classifier-cleaner/
 │   └── youtube.py              # YouTube Music playlist downloader
 └── tests/
     ├── __init__.py
-    ├── test_utils.py           # 95 tests for utils.py
-    └── test_tapper.py          # 40 tests for audio, bpm_organizer, csv_store, bpm_ui (135 total)
+    ├── test_utils.py           # 119 tests for utils.py (incl. path resolution)
+    ├── test_tapper.py          # 35 tests for audio, bpm_organizer, csv_store, bpm_ui
+    └── test_youtube.py         # 4 tests for youtube.py (158 total)
 ```

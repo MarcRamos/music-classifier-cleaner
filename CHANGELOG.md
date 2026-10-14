@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.3] - 2026-10-14
+### Fixed
+- CLI commands (`music-tapper`, `classify-organize`, `scan-library`,
+  `discover-from-library`, `tag-library-genres`) now accept native Windows
+  paths (e.g. `C:\Music`). `resolve_library_path` tries the path as given
+  before falling back to the WSL `/mnt/<drive>` form, so the same argument
+  works on Windows, WSL, and Linux/macOS
+
 ## [1.0.2] - 2026-07-27
 ### Added
 - `--tag-only` flag on `classify-organize` — tags genres and normalizes artist names in-place without moving folders into genre directories
