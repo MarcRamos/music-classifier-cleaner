@@ -55,9 +55,9 @@ def build_search_query(
 
     parts += [f'subject:"{s}"' for s in subjects]
 
-    for block in [or_block("subject", genres)]:
-        if block:
-            parts.append(block)
+    genre_block = or_block("subject", genres)
+    if genre_block:
+        parts.append(genre_block)
 
     parts += [
         "mediatype:audio",

@@ -10,7 +10,6 @@ from rapidfuzz import fuzz
 from mutagen import MutagenError
 from mutagen.easyid3 import EasyID3
 from mutagen.id3 import ID3NoHeaderError
-from mutagen.mp3 import MP3
 
 from music_classifier.bpm_organizer import bpm_folder
 from music_classifier.audio import extract_bpm

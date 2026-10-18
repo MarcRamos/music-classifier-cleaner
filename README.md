@@ -51,7 +51,7 @@ Scans the library root for artist folders (any top-level directory that isn't a 
 
 1. **Deduplicates** similar folder names using fuzzy matching (e.g. `"Greenday"` → `"Green Day"`)
 2. **Renames** the folder to the canonical name, merging if the target already exists
-3. **Updates** the `artist` ID3 tag in every MP3 inside the folder to match the canonical name
+3. **Updates** the `artist` ID3 tag in every MP3/FLAC inside the folder to match the canonical name
 4. **Queries MusicBrainz** for the artist's genre tags
 5. **Classifies** the tags into one of the predefined genre buckets via keyword matching
 6. **Moves** the entire artist folder into the matching genre subfolder (or `other/` if nothing matched)
@@ -220,7 +220,7 @@ When editing, all changes to files under `music_classifier/` take effect immedia
 ## Running tests
 
 ```bash
-# Run all tests (158 tests)
+# Run all tests (169 tests)
 pytest tests/ -v
 
 # Run with coverage
@@ -251,7 +251,8 @@ music-classifier-cleaner/
 │   └── youtube.py              # YouTube Music playlist downloader
 └── tests/
     ├── __init__.py
+    ├── test_cli.py              # 11 tests for cli.py (classify-organize)
     ├── test_utils.py           # 119 tests for utils.py (incl. path resolution)
     ├── test_tapper.py          # 35 tests for audio, bpm_organizer, csv_store, bpm_ui
-    └── test_youtube.py         # 4 tests for youtube.py (158 total)
+    └── test_youtube.py         # 4 tests for youtube.py (169 total)
 ```

@@ -27,7 +27,8 @@ def _split_csv(value):
 
 
 def _process_archive_files(query, out_folder):
-    processed = load_processed_set()
+    csv_path = os.path.join(out_folder, "library.csv")
+    processed = load_processed_set(csv_path)
     DEST_DIR = os.path.join("download", "raw")
     os.makedirs(DEST_DIR, exist_ok=True)
 
@@ -78,7 +79,7 @@ def _process_archive_files(query, out_folder):
                 object_mp3.update(
                     {
                         "id": identifier,
-                        "csv_path": os.path.join(out_folder, "library.csv"),
+                        "csv_path": csv_path,
                     }
                 )
                 append_entry(**object_mp3)
@@ -88,8 +89,9 @@ def _process_archive_files(query, out_folder):
 
 
 def _process_local_folder(folder_path, out_folder="library/"):
+    csv_path = os.path.join(out_folder, "library.csv")
     mp3_files = glob.glob(os.path.join(resolve_library_path(folder_path), "*.mp3"))
-    processed = load_processed_set()
+    processed = load_processed_set(csv_path)
     for mp3_path in mp3_files:
         click.echo(f"Processing {os.path.basename(mp3_path)}")
         if has_bpm(mp3_path):
@@ -108,9 +110,7 @@ def _process_local_folder(folder_path, out_folder="library/"):
         save_bpm_to_mp3(mp3_path, bpm)
         bpm_out_folder = os.path.join(out_folder, bpm_folder(bpm))
         object_mp3 = normalize_mp3_name_meta(mp3_path, bpm_out_folder)
-        object_mp3.update(
-            {"id": None, "csv_path": os.path.join(out_folder, "library.csv")}
-        )
+        object_mp3.update({"id": None, "csv_path": csv_path})
         append_entry(**object_mp3)
         click.echo("Successfully processed\n")
 

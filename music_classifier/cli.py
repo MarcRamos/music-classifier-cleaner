@@ -1,11 +1,11 @@
 import argparse
 import csv
+import os
 import shutil
 from pathlib import Path
 
 from mutagen import MutagenError
 from mutagen.easyid3 import EasyID3
-from mutagen.id3 import ID3NoHeaderError
 
 from music_classifier.utils import (
     GENRE_FOLDERS,
@@ -27,10 +27,11 @@ def _set_artist_tag(file_path, artist_name):
     if ext == ".mp3":
         try:
             audio = EasyID3(file_path)
-        except ID3NoHeaderError:
+            audio["artist"] = artist_name
+            audio.save(file_path)
+        except MutagenError:
+            # ID3NoHeaderError (no tags yet) or unreadable tags
             return
-        audio["artist"] = artist_name
-        audio.save(file_path)
     elif ext == ".flac":
         try:
             from mutagen.flac import FLAC
@@ -87,6 +88,18 @@ def _tag_only_main(library):
     tag_library_genres(library)
 
 
+def _artist_folder_key(artist_folders, name):
+    """Return the artist_folders key matching name ignoring case, or None.
+
+    On case-insensitive filesystems two spellings (e.g. "The" vs "the")
+    refer to the same directory, so keys must not be duplicated.
+    """
+    for existing in artist_folders:
+        if existing.casefold() == name.casefold():
+            return existing
+    return None
+
+
 def classify_organize_main():
     """Scan library, classify artists by genre via MusicBrainz, reorganise into genre folders."""
     parser = argparse.ArgumentParser(description="Classify and organise a music library.")
@@ -140,11 +153,17 @@ def classify_organize_main():
         dest_name = artist
         if dest_name in GENRE_FOLDERS:
             dest_name = f"_{dest_name}"
-        temp_dir = library / dest_name
-        temp_dir.mkdir(exist_ok=True)
-        shutil.move(str(mp3_file), str(temp_dir / mp3_file.name))
-        if dest_name not in artist_folders:
+        # On case-insensitive filesystems (Windows) the new folder may
+        # collide with an artist folder registered under a different
+        # spelling; reuse it instead of registering a duplicate path.
+        existing_key = _artist_folder_key(artist_folders, dest_name)
+        if existing_key is not None:
+            temp_dir = artist_folders[existing_key]
+        else:
+            temp_dir = library / dest_name
+            temp_dir.mkdir(exist_ok=True)
             artist_folders[dest_name] = temp_dir
+        shutil.move(str(mp3_file), str(temp_dir / mp3_file.name))
 
     if not artist_folders:
         print("No artist folders or MP3 files found")
@@ -159,9 +178,18 @@ def classify_organize_main():
 
         print(f"Processing {raw_name} -> {canonical_name}")
 
+        if not current_dir.exists():
+            print(f"  Skipping {raw_name}: folder not found "
+                  f"(already merged or moved)")
+            continue
+
         if current_dir.name != canonical_name:
             target = current_dir.with_name(canonical_name)
-            if target.exists():
+            # target.exists() is True for a case-only variant of
+            # current_dir on case-insensitive filesystems; merging a
+            # folder into itself would delete it, so rename instead.
+            if target.exists() and not os.path.samefile(
+                    current_dir, target):
                 merge_into(current_dir, target)
                 current_dir = target
             else:
@@ -191,13 +219,8 @@ def classify_organize_main():
 
 
 def update_artist_tag_inner(directory, artist_name):
-    for mp3_file in audio_files(directory):
-        try:
-            audio = EasyID3(mp3_file)
-            audio["artist"] = artist_name
-            audio.save()
-        except (ID3NoHeaderError, MutagenError):
-            pass
+    for audio_file in audio_files(directory):
+        _set_artist_tag(audio_file, artist_name)
 
 
 def merge_into(src_dir, dst_dir):

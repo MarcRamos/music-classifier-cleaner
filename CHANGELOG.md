@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.0.4] - 2026-10-18
+### Fixed
+- `classify-organize` crashed with `FileNotFoundError [WinError 2]` on
+  Windows when an artist tag's capitalization differed from the artist
+  folder name (e.g. tag `King Gizzard & The Lizard Wizard` vs folder
+  `King Gizzard & the Lizard Wizard`). On case-insensitive filesystems
+  the loose-file pass registered the same directory twice, so the second
+  entry tried to rename a folder that had already been moved into a
+  genre folder. Artist folders are now matched case-insensitively and
+  reused instead of duplicated
+- `classify-organize` no longer treats a case-only rename as a merge:
+  `target.exists()` is true for a case variant of the source folder on
+  Windows, which made it merge a folder into itself and delete its
+  contents. A `samefile` check now routes this to a plain rename
+- `classify-organize` skips (with a warning) artist folders that no
+  longer exist instead of crashing mid-run
+- 8 new tests in `tests/test_cli.py` (166 total)
+- `classify-organize` silently skipped FLAC files when rewriting the
+  `artist` tag after a folder rename — `update_artist_tag_inner` only
+  used EasyID3, which cannot read FLAC. It now delegates to
+  `_set_artist_tag`, which handles MP3 and FLAC
+- `archive-download` and `music-tapper` never skipped already-processed
+  files across runs: both called `load_processed_set()` without the CSV
+  path, so the set was always empty despite `processed.csv` being
+  written. The output CSV path is now passed (the filename/path checks
+  in `pipeline.py` still compare against the `id` column and remain
+  inert; only archive identifiers are matched)
+### Changed
+- Removed the duplicated MP3 tag-writing block by merging
+  `update_artist_tag_inner` into `_set_artist_tag`
+- Removed the unused `MP3` import from `utils.py` and a single-element
+  loop in `archive.py`
+- 3 new tests in `tests/test_cli.py` (166 → 169 total)
+
 ## [1.0.3] - 2026-10-14
 ### Fixed
 - CLI commands (`music-tapper`, `classify-organize`, `scan-library`,
